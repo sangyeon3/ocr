@@ -8,6 +8,8 @@
 import UIKit
 import MLKitTextRecognitionKorean
 import MLKitTextRecognition
+import MLKit
+//import MLImage
 import SnapKit
 
 class ViewController: UIViewController {
@@ -22,7 +24,14 @@ class ViewController: UIViewController {
         
         return btn
     }()
-    
+    lazy var ocrBtn: UIButton = {
+        let btn = UIButton()
+        btn.setTitle("OCR", for: .normal)
+        btn.backgroundColor = .systemBlue
+        btn.addTarget(self, action: #selector(onClickOcrBtn(_:)), for: .touchUpInside)
+        
+        return btn
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,10 +49,19 @@ extension ViewController{
         button.snp.makeConstraints{
             $0.centerX.centerY.equalTo(view.safeAreaLayoutGuide)
         }
+        view.addSubview(ocrBtn)
+        ocrBtn.snp.makeConstraints{
+            $0.centerX.equalTo(view.safeAreaLayoutGuide)
+            $0.top.equalTo(button.snp.bottom).offset(10)
+        }
     }
     
     @objc func onClickBtn(_ sender: Any){
         actionSheetAlert()
+    }
+    
+    @objc func onClickOcrBtn(_ sender: Any){
+        getText(image: myImageView.image!)
     }
     
     private func actionSheetAlert(){
@@ -104,14 +122,21 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
     }
 }
 
-//extension ViewController{
-//
-//    // MARK: 이미지로부터 텍스트 인식
-//    func getText(image: UIImage){
-//        let koreanOptions = KoreanTextRecognizerOptions()
-//        let textRecognizer = TextRecognizer.textRecognizer(options: koreanOptions)
-//        //let visionImage = vision
-//        //visionImage.orientation = image.imageOrientation
-//    }
-//
-//}
+extension ViewController{
+
+    // MARK: 이미지로부터 텍스트 인식
+    func getText(image: UIImage){
+        let koreanOptions = KoreanTextRecognizerOptions()
+        let textRecognizer = TextRecognizer.textRecognizer(options: koreanOptions)
+        let visionImage = VisionImage(image: image)
+        visionImage.orientation = image.imageOrientation
+        
+        textRecognizer.process(visionImage) { result, error in
+            guard error == nil, let result = result else{
+                return
+            }
+            print(result.text)
+        }
+    }
+
+}
